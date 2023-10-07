@@ -1,2 +1,5 @@
 .vscode
 *.exe
+build/bin
+node_modules
+frontend/dist
