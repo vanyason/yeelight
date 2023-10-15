@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "yeelight",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,6 +16,9 @@
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.3",
     "vite": "^3.0.7"
   }
 }
