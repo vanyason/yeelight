@@ -1,11 +1,8 @@
 import BulbToggle from "./components/BulbToggle";
+import LogsSection from "./components/LogsScetion";
 
 function BulbImage(props) {
   return <div {...props}>{" Bulb here "}</div>;
-}
-
-function LogsScetion(props) {
-  return <div {...props}>{" Logs here "}</div>;
 }
 
 function ColorPicker(props) {
@@ -30,13 +27,13 @@ function NetInterfacePicker(props) {
 
 export default function App() {
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-violet-900 to-slate-900 text-cyan-200 font-mono">
-      <div className="com outline-sky-500 basis-7/12 flex">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-violet-900 to-slate-900 text-sky-50">
+      <div className="com outline-sky-500 basis-7/12 flex overflow-auto">
         <div className="com outline-orange-300 basis-2/5 flex flex-col items-center justify-around">
           <BulbImage className="com outline-green-300 basis-5/6 flex items-center justify-center" />
           <BulbToggle />
         </div>
-        <LogsScetion className="com outline-orange-300 basis-3/5 flex items-center justify-center" />
+        <LogsSection className="com p-4 outline-orange-300 basis-3/5 overflow-auto font-mono bg-gradient-to-b from-indigo-900 to-slate-900 ring-offset-2 ring" />
       </div>
 
       <div className="com outline-sky-500 basis-4/12 flex justify-around">
