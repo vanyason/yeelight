@@ -2,6 +2,7 @@ package yeelight
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -12,32 +13,30 @@ import (
 	"time"
 )
 
-const (
-	RGB         ColorMode = 1
-	Temperature ColorMode = 2
-	HSV         ColorMode = 3
+type ColorMode int64
 
-	timeout           = time.Second * 3
-	writeTimeout      = timeout
-	connectionTimeout = timeout
-	readTimeout       = timeout
-	waitTimeout       = time.Millisecond * 1500
-	bufSize           = 2048
+const (
+	RGB               ColorMode = 1
+	Temperature       ColorMode = 2
+	HSV               ColorMode = 3
+	timeout                     = time.Second * 3
+	writeTimeout                = timeout
+	connectionTimeout           = timeout
+	readTimeout                 = timeout
+	waitTimeout                 = time.Millisecond * 1500
+	bufSize                     = 2048
 )
 
 type (
-	ColorMode int64
-
 	// Yeelight device controller class
 	YLightBulb struct {
-		Power  bool      //< on / off
-		Mode   ColorMode //< 1 - color mode; 2 - temperature; 3 - HSV
-		RGB    int       //< RGB value  		   (decimal)	if mode = 1
-		SAT    int       //< Saturation  		   (0-100)		if mode = 3
-		HUE    int       //< HUE 				   (0-359)		if mode = 3
-		CT     int       //< current temperature   (? - ?)		if mode = 2
-		Bright int       //< brightness 		   (1-100)
-
+		Power    bool         //< on / off
+		Mode     ColorMode    //< 1 - color mode; 2 - temperature; 3 - HSV
+		RGB      int          //< RGB value  		   (decimal)	if mode = 1
+		SAT      int          //< Saturation  		   (0-100)		if mode = 3
+		HUE      int          //< HUE 				   (0-359)		if mode = 3
+		CT       int          //< current temperature   (? - ?)		if mode = 2
+		Bright   int          //< brightness 		   (1-100)
 		Location *net.TCPAddr //< yeelight://ip:port
 		conn     net.Conn     //< TCP connection to yeelight
 	}
@@ -67,7 +66,7 @@ type (
 )
 
 // Find bulb in the local network. This is the constructor for the Yeelight controller
-// You need to provide the net interface name. It can be found with the ipconfig command (powershell / cmd)
+// You need to provide the net interface name. It can be found with the ifconfig command (powershell / cmd)
 func Discover(interfaceName string) (bulb *YLightBulb, e error) {
 	data, err := getDiscoverData(interfaceName)
 	if err != nil {
@@ -142,15 +141,15 @@ func (y *YLightBulb) SendCommand(method string, params ...any) (*CommandResult, 
 	buf = buf[:read]
 	result := new(CommandResult)
 	notification := new(Notification)
-	messages := strings.Split(string(buf), "\n")
+	messages := bytes.Split(buf, []byte("\n"))
 	for _, message := range messages {
-		if strings.Contains(message, "id") {
-			err = json.Unmarshal([]byte(message), result)
+		if bytes.Contains(message, []byte("id")) {
+			err = json.Unmarshal(message, result)
 			if err != nil {
 				return nil, nil, fmt.Errorf("%s error parsing reply from json (sent: %s received: %s) : %w", fn, req, buf, err)
 			}
-		} else if strings.Contains(message, "props") {
-			err = json.Unmarshal([]byte(message), notification)
+		} else if bytes.Contains(message, []byte("props")) {
+			err = json.Unmarshal(message, notification)
 			if err != nil {
 				return nil, nil, fmt.Errorf("%s error parsing reply from json (sent: %s received: %s) : %w", fn, req, buf, err)
 			}
@@ -160,13 +159,35 @@ func (y *YLightBulb) SendCommand(method string, params ...any) (*CommandResult, 
 	return result, notification, nil
 }
 
-// func (y *YLightBulb) GetProp(on bool) error {
-// 	return nil
-// }
+// Turns the bulb on / off. Not recommended to use this method. Use TurnOn / TurnOff instead
+func (y *YLightBulb) Toggle() error {
+	if _, _, err := y.SendCommand("toggle"); err != nil {
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - toggle]", err)
+	}
 
-// func (y *YLightBulb) Turn(on bool) error {
-// 	return nil
-// }
+	y.Power = !y.Power
+	return nil
+}
+
+// Turns the bulb on
+func (y *YLightBulb) TurnOn() error {
+	if _, _, err := y.SendCommand("set_power", "on", "smooth", 500); err != nil {
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - turnOn]", err)
+	}
+
+	y.Power = true
+	return nil
+}
+
+// Turns the bulb off
+func (y *YLightBulb) TurnOff() error {
+	if _, _, err := y.SendCommand("set_power", "off", "smooth", 500); err != nil {
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - turnOff]", err)
+	}
+
+	y.Power = false
+	return nil
+}
 
 // func (y *YLightBulb) SetRGB(r, g, b uint8) error {
 // 	return nil
