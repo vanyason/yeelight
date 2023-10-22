@@ -3,7 +3,7 @@ import IconLightbulbOnSVG from "./IconLightbulbOnSVG";
 import IconLightbulbOffSVG from "./IconLightbulbOffSVG";
 
 const common = "sm:w-12 sm:h-12 w-10 h-10 relative rounded-xl transition duration-500 transform p-1 text-white ";
-const onCSS = common + "bg-yellow-500 -translate-x-2";
+const onCSS = common + "bg-orange-400 -translate-x-2";
 const offCSS = common + "bg-gray-700 translate-x-full";
 
 export default function BulbToggle(props) {
