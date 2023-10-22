@@ -1,12 +1,8 @@
-import ScrollToBottom from 'react-scroll-to-bottom';
-
+import ScrollToBottom from "react-scroll-to-bottom";
 
 export default function LogsSection(props) {
-  const logs = props.logs.map(log => <p>{log}</p>);
+  let counter = 0;
+  const logs = props.logs.map((log) => <p key={counter++}> {log}</p>);
 
-  return (
-    <ScrollToBottom {...props}>
-      {logs}
-    </ScrollToBottom>
-  );
+  return <ScrollToBottom {...props}>{logs}</ScrollToBottom>;
 }

@@ -1,32 +1,16 @@
 import BulbSVG from "./components/BulbSVG";
 import BulbToggle from "./components/BulbToggle";
 import LogsSection from "./components/LogsSection";
+import ColorPicker from "./components/ColorPicker";
+import TemperaturePicker from "./components/TemperaturePicker";
+import BrightnessSlider from "./components/BrightnessSlider";
+import NetInterfacePicker from "./components/NetInterfacePicker";
 import { ClipLoader } from "react-spinners";
 
 import { useState } from "react";
 
-function ColorPicker(props) {
-  return <div {...props}>{" Color Picker "}</div>;
-}
-
-function TemperaturePicker(props) {
-  return <div {...props}>{" Temperature picker "}</div>;
-}
-
-function BrightnessSlider(props) {
-  return <div {...props}>{" Bright "}</div>;
-}
-
-function NetInterfacePicker(props) {
-  return (
-    <button type="button" className="com outline-orange-300 items-center ring ring-blue-300 hover:ring-blue-400 sm:w-20 sm:h-10 w-20 h-6">
-      {" Pick Net interface "}
-    </button>
-  );
-}
-
 export default function App() {
-  const [logMsgs, setLogMsgs] = useState([]);
+  const [logMsgs, setLogMsgs] = useState(["Application started. Looking for device ..."]);
   const [bulbConnected, setBulbConnected] = useState(false);
 
   function log(msg) {
