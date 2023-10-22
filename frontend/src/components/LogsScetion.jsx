@@ -1,6 +1,8 @@
+import ScrollToBottom from 'react-scroll-to-bottom';
+
 export default function LogsSection(props) {
   return (
-    <div {...props}>
+    <ScrollToBottom {...props}>
       1.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed
       2. euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum
       3. elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum      bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sedeuismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum      elit, vel bibendum elit elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum elit,
@@ -24,6 +26,6 @@ export default function LogsSection(props) {
       euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum
       elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum
       bibendum, elit elit bibendum elit, vel bibendum elit elit. Sed euismod, sapien vel bibendum bibendum, elit elit bibendum elit, vel bibendum elit elit.
-    </div>
+    </ScrollToBottom>
   );
 }
