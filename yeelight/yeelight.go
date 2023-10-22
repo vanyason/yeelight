@@ -30,15 +30,15 @@ const (
 type (
 	// Yeelight device controller class
 	YLightBulb struct {
-		Power    bool         //< on / off
-		Mode     ColorMode    //< 1 - color mode; 2 - temperature; 3 - HSV
-		RGB      int          //< RGB value  		   (decimal)	if mode = 1
-		SAT      int          //< Saturation  		   (0-100)		if mode = 3
-		HUE      int          //< HUE 				   (0-359)		if mode = 3
-		CT       int          //< current temperature   (? - ?)		if mode = 2
-		Bright   int          //< brightness 		   (1-100)
-		Location *net.TCPAddr //< yeelight://ip:port
-		conn     net.Conn     //< TCP connection to yeelight
+		Power    bool         `json:"power"`    //< on / off
+		Mode     ColorMode    `json:"mode"`     //< 1 - color mode; 2 - temperature; 3 - HSV
+		RGB      int          `json:"rgb"`      //< RGB value  		     (decimal)  	if mode = 1
+		SAT      int          `json:"sat"`      //< Saturation  		  (0-100)		if mode = 3
+		HUE      int          `json:"hue"`      //< HUE 				  (0-359)		if mode = 3
+		CT       int          `json:"ct"`       //< current temperature   (? - ?)		if mode = 2
+		Bright   int          `json:"bright"`   //< brightness 		      (1-100)
+		Location *net.TCPAddr `json:"location"` //< yeelight://ip:port
+		conn     net.Conn     `json:"conn"`     //< TCP connection to yeelight
 	}
 
 	// COMMAND request to Yeelight device
@@ -48,14 +48,17 @@ type (
 		Params []any  `json:"params"`
 	}
 
+	// ERROR response from Yeelight device (response to every command if error exists)
+	Error struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+
 	// RESULT response from Yeelight device (response to every command)
 	CommandResult struct {
 		ID     int   `json:"id"`
 		Result []any `json:"result,omitempty"`
-		Error  *struct {
-			Code    int    `json:"code"`
-			Message string `json:"message"`
-		} `json:"error,omitempty"`
+		Error  Error `json:"error,omitempty"`
 	}
 
 	// NOTIFICATION response from Yeelight device (every time device`s` state changes)

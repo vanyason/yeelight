@@ -26,7 +26,7 @@ function NetInterfacePicker(props) {
 }
 
 export default function App() {
-  return (
+return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-violet-900 to-slate-900 text-sky-50">
       <div className="com outline-sky-500 basis-7/12 flex overflow-auto">
         <div className="com outline-orange-300 basis-2/5 flex flex-col items-center justify-around">
