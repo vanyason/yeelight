@@ -14,8 +14,8 @@ export function SendCommand(arg1, arg2) {
   return window['go']['yeelight']['YLightBulb']['SendCommand'](arg1, arg2);
 }
 
-export function SetBright(arg1) {
-  return window['go']['yeelight']['YLightBulb']['SetBright'](arg1);
+export function SetBrightness(arg1) {
+  return window['go']['yeelight']['YLightBulb']['SetBrightness'](arg1);
 }
 
 export function SetRGB(arg1, arg2, arg3) {

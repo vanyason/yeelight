@@ -8,7 +8,7 @@ export function Disconnect():Promise<void>;
 
 export function SendCommand(arg1:string,arg2:Array<any>):Promise<yeelight.CommandResult>;
 
-export function SetBright(arg1:number):Promise<void>;
+export function SetBrightness(arg1:number):Promise<void>;
 
 export function SetRGB(arg1:number,arg2:number,arg3:number):Promise<void>;
 
