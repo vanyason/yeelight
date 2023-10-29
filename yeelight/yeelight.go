@@ -210,7 +210,7 @@ func (y *YLightBulb) SetRGB(r, g, b uint8) error {
 }
 
 // Sets the brightness of the bulb. 1 - 100
-func (y *YLightBulb) SetBright(brightness uint8) error {
+func (y *YLightBulb) SetBrightness(brightness uint8) error {
 	if brightness > 100 {
 		brightness = 100
 	} else if brightness < 1 {
@@ -218,7 +218,7 @@ func (y *YLightBulb) SetBright(brightness uint8) error {
 	}
 
 	if _, _, err := y.SendCommand("set_bright", brightness, "smooth", smoothDur); err != nil {
-		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - setBright]", err)
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - SetBrightness]", err)
 	}
 
 	y.Bright = int(brightness)
@@ -226,18 +226,18 @@ func (y *YLightBulb) SetBright(brightness uint8) error {
 }
 
 // Sets the color temperature of the bulb. 1700 - 6500
-func (y *YLightBulb) SetTemp(brightness int) error {
-	if brightness < 1700 {
-		brightness = 1700
-	} else if brightness > 6500 {
-		brightness = 6500
+func (y *YLightBulb) SetTemp(temp int) error {
+	if temp < 1700 {
+		temp = 1700
+	} else if temp > 6500 {
+		temp = 6500
 	}
 
-	if _, _, err := y.SendCommand("set_ct_abx", brightness, "smooth", smoothDur); err != nil {
+	if _, _, err := y.SendCommand("set_ct_abx", temp, "smooth", smoothDur); err != nil {
 		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - setTemp]", err)
 	}
 
-	y.CT = int(brightness)
+	y.CT = int(temp)
 	return nil
 }
 

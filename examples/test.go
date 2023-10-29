@@ -64,7 +64,7 @@ func testRGB(b *yeelight.YLightBulb) {
 func testBright(b *yeelight.YLightBulb) {
 	log.Println("Testing Bright...")
 	for i := 0; i <= 100; i += 50 {
-		stopOnError(b.SetBright(uint8(i)))
+		stopOnError(b.SetBrightness(uint8(i)))
 		log.Printf("Bright: %d\n", b.Bright)
 	}
 }
@@ -105,7 +105,7 @@ func restoreDefault(b *yeelight.YLightBulb, bCopy *yeelight.YLightBulb) {
 		stopOnError(b.TurnOff())
 	}
 
-	stopOnError(b.SetBright(uint8(bCopy.Bright)))
+	stopOnError(b.SetBrightness(uint8(bCopy.Bright)))
 
 	switch bCopy.Mode {
 	case yeelight.RGB:
