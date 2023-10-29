@@ -23,8 +23,9 @@ const (
 	writeTimeout                = timeout
 	connectionTimeout           = timeout
 	readTimeout                 = timeout
-	waitTimeout                 = time.Millisecond * 1500
+	waitTimeout                 = time.Millisecond * 1200
 	bufSize                     = 2048
+	smoothDur                   = 300
 )
 
 type (
@@ -63,15 +64,15 @@ type (
 
 	// NOTIFICATION response from Yeelight device (every time device`s` state changes)
 	Notification struct {
-		Method string            `json:"method"`
-		Params map[string]string `json:"params"`
+		Method string         `json:"method"`
+		Params map[string]any `json:"params"`
 	}
 )
 
 // Find bulb in the local network. This is the constructor for the Yeelight controller
 // You need to provide the net interface name. It can be found with the ifconfig command (powershell / cmd)
-func Discover(interfaceName string) (bulb *YLightBulb, e error) {
-	data, err := getDiscoverData(interfaceName)
+func Discover() (bulb *YLightBulb, e error) {
+	data, err := getDiscoverData()
 	if err != nil {
 		return nil, err
 	}
@@ -123,11 +124,8 @@ func (y *YLightBulb) SendCommand(method string, params ...any) (*CommandResult, 
 	// send command
 	y.conn.SetWriteDeadline(time.Now().Add(writeTimeout))
 	sent, err := y.conn.Write(req)
-	if sent != len(req) {
+	if err != nil || sent != len(req) {
 		return nil, nil, fmt.Errorf("%s error sending (message - %s) : sent %d out of %d", fn, req, sent, len(req))
-	}
-	if err != nil {
-		return nil, nil, fmt.Errorf("%s error sending (message - %s) : %w", fn, req, err)
 	}
 
 	// wait some time because several replies can return
@@ -174,7 +172,7 @@ func (y *YLightBulb) Toggle() error {
 
 // Turns the bulb on
 func (y *YLightBulb) TurnOn() error {
-	if _, _, err := y.SendCommand("set_power", "on", "smooth", 500); err != nil {
+	if _, _, err := y.SendCommand("set_power", "on", "smooth", smoothDur); err != nil {
 		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - turnOn]", err)
 	}
 
@@ -184,7 +182,7 @@ func (y *YLightBulb) TurnOn() error {
 
 // Turns the bulb off
 func (y *YLightBulb) TurnOff() error {
-	if _, _, err := y.SendCommand("set_power", "off", "smooth", 500); err != nil {
+	if _, _, err := y.SendCommand("set_power", "off", "smooth", smoothDur); err != nil {
 		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - turnOff]", err)
 	}
 
@@ -192,18 +190,58 @@ func (y *YLightBulb) TurnOff() error {
 	return nil
 }
 
-// func (y *YLightBulb) SetRGB(r, g, b uint8) error {
-// 	return nil
-// }
+// Sets the color of the bulb. 0 - 16777215(0xFFFFFF)
+func (y *YLightBulb) SetRGBInt(rgb int) error {
+	if rgb > 16777215 {
+		rgb = 16777215
+	}
 
-// func (y *YLightBulb) SetBright(brightness uint8) error {
-// 	return nil
-// }
+	if _, _, err := y.SendCommand("set_rgb", rgb, "smooth", smoothDur); err != nil {
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - setRGBInt]", err)
+	}
 
-// func (y *YLightBulb) SetTemp(brightness uint16) error {
-// 	return nil
-// }
+	y.RGB = rgb
+	return nil
+}
 
+// Sets the color of the bulb.
+func (y *YLightBulb) SetRGB(r, g, b uint8) error {
+	return y.SetRGBInt(int(r)<<16 + int(g)<<8 + int(b))
+}
+
+// Sets the brightness of the bulb. 1 - 100
+func (y *YLightBulb) SetBright(brightness uint8) error {
+	if brightness > 100 {
+		brightness = 100
+	} else if brightness < 1 {
+		brightness = 1
+	}
+
+	if _, _, err := y.SendCommand("set_bright", brightness, "smooth", smoothDur); err != nil {
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - setBright]", err)
+	}
+
+	y.Bright = int(brightness)
+	return nil
+}
+
+// Sets the color temperature of the bulb. 1700 - 6500
+func (y *YLightBulb) SetTemp(brightness int) error {
+	if brightness < 1700 {
+		brightness = 1700
+	} else if brightness > 6500 {
+		brightness = 6500
+	}
+
+	if _, _, err := y.SendCommand("set_ct_abx", brightness, "smooth", smoothDur); err != nil {
+		return fmt.Errorf("%s : %w", "[yeelight - sendCommand - setTemp]", err)
+	}
+
+	y.CT = int(brightness)
+	return nil
+}
+
+// generates command with random id
 func generateCommand(method string, params ...any) Command {
 	if len(params) == 0 {
 		params = make([]any, 0)
@@ -216,7 +254,8 @@ func generateCommand(method string, params ...any) Command {
 	}
 }
 
-func getDiscoverData(interfaceName string) (data string, err error) {
+// find light bulb in the local network
+func getDiscoverData() (data string, err error) {
 	const (
 		fn      = "[yeelight - getDiscoverData]"
 		discMsg = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb\r\n"
@@ -224,24 +263,24 @@ func getDiscoverData(interfaceName string) (data string, err error) {
 		netType = "udp"
 	)
 
-	// find provided network interface
-	intrf, err := net.InterfaceByName(interfaceName)
-	if err != nil {
-		return "", fmt.Errorf("%s no such interface(%s) - check ipconfig : %w", fn, interfaceName, err)
-	}
-
 	// create end point address
 	adr, err := net.ResolveUDPAddr(netType, discAdr)
 	if err != nil {
-		return "", fmt.Errorf("%s : %w", fn, err)
+		return "", fmt.Errorf("%s : error resolving UDP address: %w", fn, err)
 	}
 
 	// create and setup socket
-	conn, err := net.ListenMulticastUDP(netType, intrf, adr)
+	pConn, err := net.ListenPacket(netType, ":0")
 	if err != nil {
-		return "", fmt.Errorf("%s : %w", fn, err)
+		return "", fmt.Errorf("%s : error listening for UDP packets: %w", fn, err)
 	}
-	defer conn.Close()
+	defer pConn.Close()
+
+	// cast to UDPConn
+	conn, ok := pConn.(*net.UDPConn)
+	if !ok {
+		return "", fmt.Errorf("%s : error casting to UDP connection", fn)
+	}
 
 	// send/read discover message
 	conn.SetWriteDeadline(time.Now().Add(writeTimeout))
@@ -261,6 +300,7 @@ func getDiscoverData(interfaceName string) (data string, err error) {
 	return response, nil
 }
 
+// parse discover data
 func parseDiscoverData(data string) (bulb *YLightBulb, err error) {
 	const fn = "[yeelight - parseDiscoverData]"
 
@@ -269,56 +309,56 @@ func parseDiscoverData(data string) (bulb *YLightBulb, err error) {
 	// Discover data should look like http header. Let`s try to parse it that way
 	resp, err := http.ReadResponse(bufio.NewReader(strings.NewReader(data)), nil)
 	if err != nil {
-		return nil, fmt.Errorf("%s error parsing discover data (data: %s) : %w", fn, data, err)
+		return nil, fmt.Errorf("%s error reading discover data (data: %s) : %w", fn, data, err)
 	}
 	defer resp.Body.Close()
 
 	// Parse
-	strLocation := resp.Header.Get("location") //< yeelight://ip:port
-	strPower := resp.Header.Get("power")       //< on / off
-	strMode := resp.Header.Get("color_mode")   //< 1 - color mode; 2 - temperature; 3 - HSV
-	strRGB := resp.Header.Get("rgb")           //< RGB value  			(decimal)	if mode = 1
-	strSAT := resp.Header.Get("sat")           //< Saturation  			(0-100)		if mode = 3
-	strHUE := resp.Header.Get("hue")           //< HUE 					(0-359)		if mode = 3
-	strCT := resp.Header.Get("ct")             //< current temperature  (? - ?)		if mode = 2
-	strBright := resp.Header.Get("bright")     //< brightness 			(1-100)
-
 	bulb = &YLightBulb{}
-	bulb.Location, err = net.ResolveTCPAddr("tcp", strings.TrimPrefix(strLocation, "yeelight://"))
+
+	bulb.Location, err = net.ResolveTCPAddr("tcp", strings.TrimPrefix(resp.Header.Get("location"), "yeelight://"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse location (location: %s): %w", fn, strLocation, err)
+		return nil, fmt.Errorf("%s can`t parse location (data: %s): %w", fn, data, err)
 	}
-	if strPower == "on" {
+
+	switch resp.Header.Get("power") {
+	case "on":
 		bulb.Power = true
-	} else if strPower == "off" {
+	case "off":
 		bulb.Power = false
-	} else {
-		return nil, fmt.Errorf("%s can`t parse power (power: %s): %w", fn, strPower, err)
+	default:
+		return nil, fmt.Errorf("%s can`t parse power (data: %s): %w", fn, data, err)
 	}
-	mode, err := strconv.Atoi(strMode)
+
+	mode, err := strconv.Atoi(resp.Header.Get("color_mode"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse mode (mode: %s): %w", fn, strMode, err)
+		return nil, fmt.Errorf("%s can`t parse mode (data: %s): %w", fn, data, err)
 	}
 	bulb.Mode = ColorMode(mode)
-	bulb.RGB, err = strconv.Atoi(strRGB)
+
+	bulb.RGB, err = strconv.Atoi(resp.Header.Get("rgb"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse RGB (RGB: %s): %w", fn, strRGB, err)
+		return nil, fmt.Errorf("%s can`t parse RGB (data: %s): %w", fn, data, err)
 	}
-	bulb.SAT, err = strconv.Atoi(strSAT)
+
+	bulb.SAT, err = strconv.Atoi(resp.Header.Get("sat"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse SAT (SAT: %s): %w", fn, strSAT, err)
+		return nil, fmt.Errorf("%s can`t parse SAT (data: %s): %w", fn, data, err)
 	}
-	bulb.HUE, err = strconv.Atoi(strHUE)
+
+	bulb.HUE, err = strconv.Atoi(resp.Header.Get("hue"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse HUE (HUE: %s): %w", fn, strHUE, err)
+		return nil, fmt.Errorf("%s can`t parse HUE (data: %s): %w", fn, data, err)
 	}
-	bulb.CT, err = strconv.Atoi(strCT)
+
+	bulb.CT, err = strconv.Atoi(resp.Header.Get("ct"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse current temp (CT: %s): %w", fn, strCT, err)
+		return nil, fmt.Errorf("%s can`t parse current temp (data: %s): %w", fn, data, err)
 	}
-	bulb.Bright, err = strconv.Atoi(strBright)
+
+	bulb.Bright, err = strconv.Atoi(resp.Header.Get("bright"))
 	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse brightness (right: %s): %w", fn, strBright, err)
+		return nil, fmt.Errorf("%s can`t parse brightness (data: %s): %w", fn, data, err)
 	}
 
 	return bulb, nil

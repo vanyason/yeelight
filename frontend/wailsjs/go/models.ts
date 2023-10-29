@@ -51,7 +51,7 @@ export namespace yeelight {
 	
 	export class Notification {
 	    method: string;
-	    params: {[key: string]: string};
+	    params: {[key: string]: any};
 	
 	    static createFrom(source: any = {}) {
 	        return new Notification(source);

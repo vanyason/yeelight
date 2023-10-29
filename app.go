@@ -26,6 +26,6 @@ func (a *App) Greet(name string) string {
 }
 
 // Discover returns a light bulb
-func (a *App) Discover(netInterface string) (*yeelight.YLightBulb, error) {
-	return yeelight.Discover(netInterface)
+func (a *App) Discover() (*yeelight.YLightBulb, error) {
+	return yeelight.Discover()
 }

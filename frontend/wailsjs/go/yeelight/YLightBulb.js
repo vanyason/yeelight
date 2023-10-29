@@ -14,6 +14,22 @@ export function SendCommand(arg1, arg2) {
   return window['go']['yeelight']['YLightBulb']['SendCommand'](arg1, arg2);
 }
 
+export function SetBright(arg1) {
+  return window['go']['yeelight']['YLightBulb']['SetBright'](arg1);
+}
+
+export function SetRGB(arg1, arg2, arg3) {
+  return window['go']['yeelight']['YLightBulb']['SetRGB'](arg1, arg2, arg3);
+}
+
+export function SetRGBInt(arg1) {
+  return window['go']['yeelight']['YLightBulb']['SetRGBInt'](arg1);
+}
+
+export function SetTemp(arg1) {
+  return window['go']['yeelight']['YLightBulb']['SetTemp'](arg1);
+}
+
 export function Toggle() {
   return window['go']['yeelight']['YLightBulb']['Toggle']();
 }
