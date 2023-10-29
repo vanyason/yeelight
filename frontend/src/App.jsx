@@ -1,30 +1,40 @@
+import { useState } from "react";
+import { useEffect } from "react";
+import { useRef } from "react";
+
 import BulbSVG from "./components/BulbSVG";
 import BulbToggle from "./components/BulbToggle";
 import LogsSection from "./components/LogsSection";
 import ColorPicker from "./components/ColorPicker";
 import TemperaturePicker from "./components/TemperaturePicker";
 import BrightnessSlider from "./components/BrightnessSlider";
-import NetInterfacePicker from "./components/NetInterfacePicker";
-import { ClipLoader } from "react-spinners";
+import ReconnectButton from "./components/ReconnectButton";
 
-import { useState } from "react";
+function logMessage(msg) {
+  return `[${new Date().toLocaleTimeString()}] ${msg}`;
+}
 
 export default function App() {
-  const [logMsgs, setLogMsgs] = useState(["Application started. Looking for device ..."]);
+  const [logMsgs, setLogMsgs] = useState([logMessage("App started...")]);
   const [bulbConnected, setBulbConnected] = useState(false);
 
   function log(msg) {
-    setLogMsgs([...logMsgs, msg]);
+    setLogMsgs((logMsgs) => [...logMsgs, logMessage(msg)]);
   }
+
+  useEffect(() => {
+    log("Looking for bulb...");
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-violet-900 to-slate-900 text-sky-50">
       <div className="com outline-sky-500 basis-7/12 flex overflow-auto">
         <div className="com outline-orange-300 basis-2/5 flex flex-col items-center justify-around">
-          <BulbSVG className="com outline-green-300 basis-8/12 flex items-center justify-center" color="#808080" />
-          {!bulbConnected ? <ClipLoader className="absolute" color="#36d7b7" speedMultiplier="0.7" /> : null}
-          {bulbConnected ? <BulbToggle /> : null}
-          {bulbConnected ? <NetInterfacePicker className="com outline-orange-300 items-center ring ring-blue-300 hover:ring-blue-400 " /> : null}
+          <BulbSVG className="com outline-green-300 basis-10/12 flex items-center justify-center" color="#808080" connected={bulbConnected} />
+          <div className="com flex w-full items-center justify-evenly basis-2/12">
+            {bulbConnected && <ReconnectButton className="com outline-orange-300 items-center ring ring-blue-300 hover:ring-blue-400 " />}
+            {bulbConnected && <BulbToggle />}
+          </div>
         </div>
         <LogsSection
           logs={logMsgs}
