@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Discover, Connect, Disconnect } from "../wailsjs/go/main/App";
 
 import BulbSVG from "./components/BulbSVG";
 import BulbToggle from "./components/BulbToggle";
@@ -26,19 +27,28 @@ export default function App() {
     while (!b) {
       try {
         b = await Discover();
-        log("Bulb found!" + b);
         yBulb.current = b;
+        await Connect(yBulb.current);
         setBulbConnected(true);
-        console.log(yBulb.current);
+        log("Bulb found and connected!");
       } catch (err) {
-        log("Bulb not found! Try again... comes from catch" + err);
+        if (!b) {
+          log("Bulb not found! Trying again... : " + err);
+        } else {
+          log("Can not connect :" + err);
+        }
       }
     }
   }
 
   useEffect(() => {
     log("Looking for bulb...");
-    // findAndConnectBulb();
+    findAndConnectBulb();
+    return () => {
+      if (yBulb.current) {
+        Disconnect(yBulb.current);
+      }
+    };
   }, []);
 
   return (
