@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Discover } from "../wailsjs/go/main/App.js";
 
 import BulbSVG from "./components/BulbSVG";
 import BulbToggle from "./components/BulbToggle";
