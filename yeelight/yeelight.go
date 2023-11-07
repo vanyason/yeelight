@@ -70,13 +70,33 @@ type (
 )
 
 // Find bulb in the local network. This is the constructor for the Yeelight controller
-// You need to provide the net interface name. It can be found with the ifconfig command (powershell / cmd)
 func Discover() (bulb *YLightBulb, e error) {
 	data, err := getDiscoverData()
 	if err != nil {
 		return nil, err
 	}
 	return parseDiscoverData(data)
+}
+
+// This is the special function for the wails lib. It does exactly the same as Discover(), but can be called from the frontend
+func (y *YLightBulb) SelfDiscover() (*YLightBulb, error) {
+	data, err := getDiscoverData()
+	if err != nil {
+		return nil, err
+	}
+
+	bulb, err := parseDiscoverData(data)
+	if err != nil {
+		return nil, err
+	}
+
+	*y = *bulb
+	return y, nil
+}
+
+// Returns the pointer to the bulb. This is the special function for the wails lib.
+func (y *YLightBulb) GetGuts() *YLightBulb {
+	return y
 }
 
 // Before sending commands connection should be established. Do not forget to disconnect
