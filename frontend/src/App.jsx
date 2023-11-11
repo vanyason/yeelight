@@ -111,9 +111,9 @@ export default function App() {
         />
       </div>
       <div className="com outline-sky-500 basis-5/12 flex justify-around">
-        <ColorPicker className="com outline-orange-300 flex items-center justify-center basis-5/12" />
-        <TemperaturePicker className="com outline-orange-300 flex items-center justify-center basis-5/12" />
-        <BrightnessSlider className="com outline-orange-300 flex items-center justify-center basis-1/12" />
+        <ColorPicker className="com outline-orange-300 flex justify-center items-center basis-2/3" />
+        <TemperaturePicker className="com outline-orange-300 flex items-center justify-center basis-1/6" />
+        <BrightnessSlider className="com outline-orange-300 flex items-center justify-center basis-1/6" />
       </div>
     </div>
   );
