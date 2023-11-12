@@ -1,7 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-.com {
-  @apply m-2 outline-dashed outline-2 rounded-lg;
-}

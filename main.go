@@ -27,10 +27,10 @@ func main() {
 
 	err := wails.Run(&options.App{
 		Title:            "Yeelight by Vanyason",
-		Width:            768,
-		Height:           1024,
-		MinWidth:         480,
-		MinHeight:        640,
+		Width:            600,
+		Height:           800,
+		MinWidth:         600,
+		MinHeight:        800,
 		AssetServer:      &assetserver.Options{Assets: assets},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		Bind:             []interface{}{app, bulb},

@@ -1,16 +1,16 @@
 import React, { useRef, useEffect } from "react";
 import iro from "@jaames/iro";
 
-let colorPicker = null;
+let brightPicker = null;
 
-export default function BrightnessSlider(props) {
+export default function BrightnessSlider({ parentClasses }) {
   const colorPickerDomRef = useRef(null);
 
   useEffect(() => {
-    if (colorPickerDomRef.current && !colorPicker) {
-      colorPicker = new iro.ColorPicker(colorPickerDomRef.current, {
-        width: 250,
-        color: "rgb(255, 255, 255)",
+    if (colorPickerDomRef.current && !brightPicker) {
+      brightPicker = new iro.ColorPicker(colorPickerDomRef.current, {
+        width: 200,
+        color: "rgb(0, 0, 0)",
         borderWidth: 1,
         borderColor: "#fff",
         layoutDirection: "horizontal",
@@ -25,18 +25,18 @@ export default function BrightnessSlider(props) {
         ],
       });
 
-      colorPicker.on("input:end", function (color) {
-        console.log(color.value);
-      });
+      // brightPicker.on("input:end", function (color) {
+      //   console.log(color.value);
+      // });
     }
 
     return () => {
-      if (colorPicker) {
-        colorPicker = null;
+      if (brightPicker) {
+        brightPicker = null;
         colorPickerDomRef.current = null;
       }
     };
   }, []);
 
-  return <div {...props} ref={colorPickerDomRef} />;
+  return <div className={`${parentClasses}`} ref={colorPickerDomRef} />;
 }

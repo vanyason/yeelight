@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
-import { SelfDiscover, Connect, Disconnect, GetGuts } from "../wailsjs/go/yeelight/YLightBulb";
-import { TurnOn, TurnOff } from "../wailsjs/go/yeelight/YLightBulb";
+import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff } from "../wailsjs/go/yeelight/YLightBulb";
 
-import { LogMessage } from "./utils/Utils";
-
-import BulbSVG from "./components/BulbSVG";
-import BulbToggle from "./components/BulbToggle";
+import BulbButton from "./components/BulbButton";
 import LogsSection from "./components/LogsSection";
 import ColorPicker from "./components/ColorPicker";
 import TemperaturePicker from "./components/TemperaturePicker";
 import BrightnessSlider from "./components/BrightnessSlider";
 import ReconnectButton from "./components/ReconnectButton";
+import DropLogsButton from "./components/DropLogsButton";
 
-export function BulbConnected(bulb) {
-  return bulb !== null;
+function LogMessage(msg) {
+  return `[${new Date().toLocaleTimeString()}] ${msg}`;
 }
 
 export default function App() {
@@ -24,26 +21,30 @@ export default function App() {
     setLogMsgs((prev) => [...prev, LogMessage(msg)]);
   }
 
+  function dropLogs() {
+    setLogMsgs([LogMessage("Logs cleared!")]);
+  }
+
   async function connect() {
     let bulbLocal = null;
-    while (!bulbLocal) {
+    const retries = 3;
+    for (let i = 1; i <= retries && !bulbLocal; i++) {
       try {
+        log(`Looking for bulb (try ${i} of ${retries})...`);
         bulbLocal = await SelfDiscover();
         await Connect();
         setBulb(bulbLocal);
         log("Bulb found and connected!");
+        return;
       } catch (err) {
-        if (!bulbLocal) {
-          log("Bulb not found! Trying again... : " + err);
-        } else {
-          log("Can not connect :" + err);
-        }
+        bulbLocal ? log(`Can not connect : ${err}`) : log(`Bulb not found! Trying again... : ${err}`);
       }
     }
+    log("Bulb not found! Check that it is turned on and retry!");
   }
 
   async function disconnect() {
-    if (!BulbConnected(bulb)) {
+    if (!bulb) {
       log("Bulb was null. No need to disconnect!");
       return;
     }
@@ -53,7 +54,7 @@ export default function App() {
       setBulb(null);
       log("Bulb disconnected!");
     } catch (err) {
-      log("Can not disconnect :" + err);
+      log(`Can not disconnect : ${err}`);
     }
   }
 
@@ -62,27 +63,25 @@ export default function App() {
       await disconnect();
       await connect();
     } catch (err) {
-      log("Can not reconnect :" + err);
+      log(`Can not reconnect : ${err}`);
     }
   }
 
-  async function toggleBulb() {
-    if (!BulbConnected(bulb)) {
+  async function toggle() {
+    if (!bulb) {
       log("Bulb not connected!");
       return;
     }
 
     try {
       bulb.power ? await TurnOff() : await TurnOn();
-      let b = await GetGuts();
-      setBulb(b);
+      setBulb(await GetGuts());
     } catch (err) {
-      log("Can not toggle bulb :" + err);
+      log(`Can not toggle bulb : ${err}`);
     }
   }
 
   useEffect(() => {
-    log("Looking for bulb...");
     connect();
     return () => {
       disconnect();
@@ -90,30 +89,21 @@ export default function App() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-violet-900 to-slate-900 text-sky-50">
-      <div className="com outline-sky-500 basis-7/12 flex overflow-auto">
-        <div className="com outline-orange-300 basis-2/5 flex flex-col items-center justify-around">
-          <BulbSVG
-            className="com outline-green-300 basis-10/12 flex items-center justify-center"
-            color={BulbConnected(bulb) ? "#" + bulb.rgb.toString(16) : undefined}
-            connected={+BulbConnected(bulb)}
-          />
-          <div className="com flex w-full items-center justify-evenly basis-2/12">
-            {BulbConnected(bulb) && (
-              <ReconnectButton onClick={reconnect} className="com outline-orange-300 items-center ring ring-blue-300 hover:ring-blue-400 " />
-            )}
-            {BulbConnected(bulb) && <BulbToggle clickCallback={toggleBulb} mode={BulbConnected(bulb) ? bulb.power : true} />}
+    <div className="h-screen flex flex-col bg-gradient-to-t from-zinc-900 to-zinc-700 text-sky-100">
+      <div className="basis-9/12 flex overflow-auto">
+        <div className="m-2 outline rounded outline-2 outline-gray-400 basis-2/5 flex flex-col items-center justify-around">
+          <BulbButton onClick={toggle} bulbRef={bulb} parentClasses="basis-9/12 flex items-center justify-center" />
+          <div className="h-full flex flex-col items-center justify-center gap-4 basis-3/12">
+            <ReconnectButton onClick={reconnect} />
+            <DropLogsButton onClick={dropLogs} />
           </div>
         </div>
-        <LogsSection
-          logs={logMsgs}
-          className="com p-4 outline-orange-300 basis-3/5 overflow-auto font-mono bg-gradient-to-b from-indigo-900 to-slate-900 ring-offset-2 ring"
-        />
+        <LogsSection parentClasses="m-2 basis-3/5" logs={logMsgs} />
       </div>
-      <div className="com outline-sky-500 basis-5/12 flex justify-around">
-        <ColorPicker className="com outline-orange-300 flex justify-center items-center basis-2/3" />
-        <TemperaturePicker className="com outline-orange-300 flex items-center justify-center basis-1/6" />
-        <BrightnessSlider className="com outline-orange-300 flex items-center justify-center basis-1/6" />
+      <div className="m-2 outline rounded outline-2 outline-gray-400 basis-3/12 flex items-center justify-center">
+        <ColorPicker parentClasses="m-2 hover:opacity-95" />
+        <TemperaturePicker parentClasses="m-2 hover:opacity-95 " />
+        <BrightnessSlider parentClasses="m-2 hover:opacity-95" />
       </div>
     </div>
   );

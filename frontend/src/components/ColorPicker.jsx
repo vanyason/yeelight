@@ -3,14 +3,13 @@ import iro from "@jaames/iro";
 
 let colorPicker = null;
 
-export default function ColorPicker(props) {
+export default function ColorPicker({ parentClasses }) {
   const colorPickerDomRef = useRef(null);
 
   useEffect(() => {
     if (colorPickerDomRef.current && !colorPicker) {
       colorPicker = new iro.ColorPicker(colorPickerDomRef.current, {
-        width: 250,
-        color: "rgb(255, 0, 0)",
+        width: 200,
         borderWidth: 1,
         borderColor: "#fff",
         layout: [
@@ -19,11 +18,9 @@ export default function ColorPicker(props) {
           },
         ],
       });
-      console.log(colorPicker);
 
-      colorPicker.on("input:end", function (color) {
-        console.log(color);
-      });
+      // colorPicker.on("input:end", function (color) {
+      // });
     }
 
     return () => {
@@ -34,5 +31,5 @@ export default function ColorPicker(props) {
     };
   }, []);
 
-  return <div {...props} ref={colorPickerDomRef} />;
+  return <div className={`${parentClasses}`} ref={colorPickerDomRef} />;
 }
