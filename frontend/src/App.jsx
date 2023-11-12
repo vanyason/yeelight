@@ -16,6 +16,7 @@ function LogMessage(msg) {
 export default function App() {
   const [logMsgs, setLogMsgs] = useState([LogMessage("App started...")]);
   const [bulb, setBulb] = useState(null);
+  const [lock, setLock] = useState(false);
 
   function log(msg) {
     setLogMsgs((prev) => [...prev, LogMessage(msg)]);
@@ -26,6 +27,9 @@ export default function App() {
   }
 
   async function connect() {
+    if (lock) return;
+
+    setLock(true);
     let bulbLocal = null;
     const retries = 3;
     for (let i = 1; i <= retries && !bulbLocal; i++) {
@@ -35,20 +39,25 @@ export default function App() {
         await Connect();
         setBulb(bulbLocal);
         log("Bulb found and connected!");
+        setLock(false);
         return;
       } catch (err) {
         bulbLocal ? log(`Can not connect : ${err}`) : log(`Bulb not found! Trying again... : ${err}`);
       }
     }
     log("Bulb not found! Check that it is turned on and retry!");
+    setLock(false);
   }
 
   async function disconnect() {
+    if (lock) return;
+
     if (!bulb) {
       log("Bulb was null. No need to disconnect!");
       return;
     }
 
+    setLock(true);
     try {
       await Disconnect();
       setBulb(null);
@@ -56,6 +65,7 @@ export default function App() {
     } catch (err) {
       log(`Can not disconnect : ${err}`);
     }
+    setLock(false);
   }
 
   async function reconnect() {
@@ -68,17 +78,21 @@ export default function App() {
   }
 
   async function toggle() {
+    if (lock) return;
+
     if (!bulb) {
       log("Bulb not connected!");
       return;
     }
 
+    setLock(true);
     try {
       bulb.power ? await TurnOff() : await TurnOn();
       setBulb(await GetGuts());
     } catch (err) {
       log(`Can not toggle bulb : ${err}`);
     }
+    setLock(false);
   }
 
   useEffect(() => {
