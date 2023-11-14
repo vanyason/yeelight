@@ -3,7 +3,7 @@ import iro from "@jaames/iro";
 
 let colorPicker = null;
 
-export default function ColorPicker({ parentClasses }) {
+export default function ColorPicker({ onColorChange, onColorChangeEnd, rgb = "#FFFFFF" }) {
   const colorPickerDomRef = useRef(null);
 
   useEffect(() => {
@@ -19,8 +19,13 @@ export default function ColorPicker({ parentClasses }) {
         ],
       });
 
-      // colorPicker.on("input:end", function (color) {
-      // });
+      colorPicker.on("input:change", function (color) {
+        onColorChange ? onColorChange(color) : undefined;
+      });
+
+      colorPicker.on("input:end", function (color) {
+        onColorChangeEnd ? onColorChangeEnd(color) : undefined;
+      });
     }
 
     return () => {
@@ -31,5 +36,11 @@ export default function ColorPicker({ parentClasses }) {
     };
   }, []);
 
-  return <div className={`${parentClasses}`} ref={colorPickerDomRef} />;
+  useEffect(() => {
+    if (colorPicker) {
+      colorPicker.color.set(rgb);
+    }
+  }, [rgb]);
+
+  return <div className="hover:opacity-95" ref={colorPickerDomRef} />;
 }

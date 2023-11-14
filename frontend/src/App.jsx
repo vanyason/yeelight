@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff } from "../wailsjs/go/yeelight/YLightBulb";
+import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff, SetRGBInt } from "../wailsjs/go/yeelight/YLightBulb";
+import { LogMessage, RGBHexStringToInt, RGBIntToHexString } from "./utils";
 
 import BulbButton from "./components/BulbButton";
 import LogsSection from "./components/LogsSection";
@@ -9,14 +10,13 @@ import BrightnessSlider from "./components/BrightnessSlider";
 import ReconnectButton from "./components/ReconnectButton";
 import DropLogsButton from "./components/DropLogsButton";
 
-function LogMessage(msg) {
-  return `[${new Date().toLocaleTimeString()}] ${msg}`;
-}
-
 export default function App() {
   const [logMsgs, setLogMsgs] = useState([LogMessage("App started...")]);
   const [bulb, setBulb] = useState(null);
   const [lock, setLock] = useState(false);
+
+  // Nasty hacks to make the color picker work
+  const [commitColorChange, setCommitColorChange] = useState(false);
 
   function log(msg) {
     setLogMsgs((prev) => [...prev, LogMessage(msg)]);
@@ -27,7 +27,10 @@ export default function App() {
   }
 
   async function connect() {
-    if (lock) return;
+    if (lock) {
+      log("Connect : lock is on!");
+      return;
+    }
 
     setLock(true);
     let bulbLocal = null;
@@ -50,7 +53,10 @@ export default function App() {
   }
 
   async function disconnect() {
-    if (lock) return;
+    if (lock) {
+      log("Disconnect : lock is on!");
+      return;
+    }
 
     if (!bulb) {
       log("Bulb was null. No need to disconnect!");
@@ -78,22 +84,72 @@ export default function App() {
   }
 
   async function toggle() {
-    if (lock) return;
+    if (lock) {
+      log("Toggle : lock is on!");
+      return;
+    }
 
     if (!bulb) {
-      log("Bulb not connected!");
+      log("Toggle : bulb not connected!");
       return;
     }
 
     setLock(true);
+    log("Toggling bulb...");
+
+    const expectedPower = !bulb.power;
     try {
       bulb.power ? await TurnOff() : await TurnOn();
       setBulb(await GetGuts());
+      log(`Bulb is now ${expectedPower ? "ON" : "OFF"}`);
     } catch (err) {
       log(`Can not toggle bulb : ${err}`);
     }
+
     setLock(false);
   }
+
+  async function commitRGB() {
+    if (lock) {
+      log("Change RGB : lock is on!");
+      return;
+    }
+
+    if (!bulb) {
+      log("Change color : bulb not connected!");
+      return;
+    }
+
+    setLock(true);
+    log(`Changing color to ${RGBIntToHexString(bulb.rgb)}`);
+
+    try {
+      await SetRGBInt(bulb.rgb);
+      setBulb(await GetGuts());
+      log("Color changed!");
+    } catch (err) {
+      log(`Can not change color : ${err}`);
+    }
+
+    setLock(false);
+  }
+
+  function onColorPickerColorChangeEnd(color) {
+    setCommitColorChange(true);
+  }
+
+  function onColorPickerColorChange(color) {
+    setBulb((prev) => {
+      return { ...prev, rgb: RGBHexStringToInt(color.hexString) };
+    });
+  }
+
+  useEffect(() => {
+    if (commitColorChange) {
+      commitRGB(bulb.rgb);
+      setCommitColorChange(false);
+    }
+  }, [commitColorChange]);
 
   useEffect(() => {
     connect();
@@ -114,10 +170,14 @@ export default function App() {
         </div>
         <LogsSection parentClasses="m-2 basis-3/5" logs={logMsgs} />
       </div>
-      <div className="m-2 outline rounded outline-2 outline-gray-400 basis-3/12 flex items-center justify-center">
-        <ColorPicker parentClasses="m-2 hover:opacity-95" />
-        <TemperaturePicker parentClasses="m-2 hover:opacity-95 " />
-        <BrightnessSlider parentClasses="m-2 hover:opacity-95" />
+      <div className="m-2 outline rounded outline-2 outline-gray-400 basis-3/12 flex items-center gap-4 justify-center">
+        <ColorPicker
+          rgb={bulb ? RGBIntToHexString(bulb.rgb) : undefined}
+          onColorChange={onColorPickerColorChange}
+          onColorChangeEnd={onColorPickerColorChangeEnd}
+        />
+        <TemperaturePicker />
+        <BrightnessSlider />
       </div>
     </div>
   );

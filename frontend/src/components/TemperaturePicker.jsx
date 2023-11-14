@@ -39,5 +39,5 @@ export default function TemperaturePicker({ parentClasses }) {
     };
   }, []);
 
-  return <div className={`${parentClasses}`} ref={colorPickerDomRef} />;
+  return <div className="hover:opacity-95" ref={colorPickerDomRef} />;
 }
