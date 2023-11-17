@@ -3,12 +3,12 @@ import iro from "@jaames/iro";
 
 let tempPicker = null;
 
-export default function TemperaturePicker({ parentClasses }) {
-  const colorPickerDomRef = useRef(null);
+export default function TemperaturePicker({ onTempChange, onTempChangeEnd, temp }) {
+  const tempPickerDomRef = useRef(null);
 
   useEffect(() => {
-    if (colorPickerDomRef.current && !tempPicker) {
-      tempPicker = new iro.ColorPicker(colorPickerDomRef.current, {
+    if (tempPickerDomRef.current && !tempPicker) {
+      tempPicker = new iro.ColorPicker(tempPickerDomRef.current, {
         width: 200,
         borderWidth: 1,
         borderColor: "#fff",
@@ -20,24 +20,37 @@ export default function TemperaturePicker({ parentClasses }) {
               sliderType: "kelvin",
               sliderSize: 40,
               sliderShape: "circle",
+              minTemperature: 2000,
+              maxTemperature: 6500,
             },
           },
         ],
       });
 
-      // tempPicker.on("input:end", function (color) {
-      //   console.log(color.kelvin);
-      //   console.log(color.value);
-      // });
+      tempPicker.color.kelvin = 4250;
+
+      tempPicker.on("input:change", function (color) {
+        onTempChange ? onTempChange(color) : undefined;
+      });
+
+      tempPicker.on("input:end", function (color) {
+        onTempChangeEnd ? onTempChangeEnd(color) : undefined;
+      });
     }
 
     return () => {
       if (tempPicker) {
         tempPicker = null;
-        colorPickerDomRef.current = null;
+        tempPickerDomRef.current = null;
       }
     };
   }, []);
 
-  return <div className="hover:opacity-95" ref={colorPickerDomRef} />;
+  useEffect(() => {
+    if (tempPicker && temp) {
+      tempPicker.color.kelvin = temp;
+    }
+  }, [temp]);
+
+  return <div className="hover:opacity-95" ref={tempPickerDomRef} />;
 }

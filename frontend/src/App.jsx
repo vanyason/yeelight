@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff, SetRGBInt } from "../wailsjs/go/yeelight/YLightBulb";
+import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff, SetRGBInt, SetTemp } from "../wailsjs/go/yeelight/YLightBulb";
 import { LogMessage, RGBHexStringToInt, RGBIntToHexString } from "./utils";
 
 import BulbButton from "./components/BulbButton";
@@ -17,6 +17,8 @@ export default function App() {
 
   // Nasty hacks to make the color picker work
   const [commitColorChange, setCommitColorChange] = useState(false);
+  const [commitTempChange, setCommitTempChange] = useState(false);
+  const [commitBrightnessChange, setCommitBrightnessChange] = useState(false);
 
   function log(msg) {
     setLogMsgs((prev) => [...prev, LogMessage(msg)]);
@@ -134,7 +136,32 @@ export default function App() {
     setLock(false);
   }
 
-  function onColorPickerColorChangeEnd(color) {
+  async function commitTEMP() {
+    if (lock) {
+      log("Change Temperature : lock is on!");
+      return;
+    }
+
+    if (!bulb) {
+      log("Change Temperature : bulb not connected!");
+      return;
+    }
+
+    setLock(true);
+    log(`Changing temperature to ${bulb.ct}`);
+
+    try {
+      await SetTemp(bulb.ct);
+      setBulb(await GetGuts());
+      log("Temperature changed!");
+    } catch (err) {
+      log(`Can not change temperature : ${err}`);
+    }
+
+    setLock(false);
+  }
+
+  function onColorPickerColorChangeEnd() {
     setCommitColorChange(true);
   }
 
@@ -144,12 +171,29 @@ export default function App() {
     });
   }
 
+  function onTemperaturePickerTempChangeEnd() {
+    setCommitTempChange(true);
+  }
+
+  function onTemperaturePickerTempChange(color) {
+    setBulb((prev) => {
+      return { ...prev, ct: parseInt(color.kelvin) };
+    });
+  }
+
   useEffect(() => {
     if (commitColorChange) {
       commitRGB(bulb.rgb);
       setCommitColorChange(false);
     }
   }, [commitColorChange]);
+
+  useEffect(() => {
+    if (commitTempChange) {
+      commitTEMP(bulb.ct);
+      setCommitTempChange(false);
+    }
+  }, [commitTempChange]);
 
   useEffect(() => {
     connect();
@@ -176,7 +220,7 @@ export default function App() {
           onColorChange={onColorPickerColorChange}
           onColorChangeEnd={onColorPickerColorChangeEnd}
         />
-        <TemperaturePicker />
+        <TemperaturePicker temp={bulb ? bulb.ct : undefined} onTempChange={onTemperaturePickerTempChange} onTempChangeEnd={onTemperaturePickerTempChangeEnd} />
         <BrightnessSlider />
       </div>
     </div>
