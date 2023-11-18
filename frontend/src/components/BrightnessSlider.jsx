@@ -3,12 +3,12 @@ import iro from "@jaames/iro";
 
 let brightPicker = null;
 
-export default function BrightnessSlider({ parentClasses }) {
-  const colorPickerDomRef = useRef(null);
+export default function BrightnessSlider({ onBrightChange, onBrightChangeEnd, bright }) {
+  const brightPickerDomRef = useRef(null);
 
   useEffect(() => {
-    if (colorPickerDomRef.current && !brightPicker) {
-      brightPicker = new iro.ColorPicker(colorPickerDomRef.current, {
+    if (brightPickerDomRef.current && !brightPicker) {
+      brightPicker = new iro.ColorPicker(brightPickerDomRef.current, {
         width: 200,
         color: "rgb(0, 0, 0)",
         borderWidth: 1,
@@ -25,18 +25,30 @@ export default function BrightnessSlider({ parentClasses }) {
         ],
       });
 
-      // brightPicker.on("input:end", function (color) {
-      //   console.log(color.value);
-      // });
+      brightPicker.color.value = 50;
+
+      brightPicker.on("input:change", function (color) {
+        onBrightChange ? onBrightChange(color) : undefined;
+      });
+
+      brightPicker.on("input:end", function (color) {
+        onBrightChangeEnd ? onBrightChangeEnd(color) : undefined;
+      });
     }
 
     return () => {
       if (brightPicker) {
         brightPicker = null;
-        colorPickerDomRef.current = null;
+        brightPickerDomRef.current = null;
       }
     };
   }, []);
 
-  return <div className="hover:opacity-95" ref={colorPickerDomRef} />;
+  useEffect(() => {
+    if (brightPicker && bright) {
+      brightPicker.color.value = bright;
+    }
+  }, [bright]);
+
+  return <div className="hover:opacity-95" ref={brightPickerDomRef} />;
 }

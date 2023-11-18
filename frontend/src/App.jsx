@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff, SetRGBInt, SetTemp } from "../wailsjs/go/yeelight/YLightBulb";
+import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff, SetRGBInt, SetTemp, SetBrightness } from "../wailsjs/go/yeelight/YLightBulb";
 import { LogMessage, RGBHexStringToInt, RGBIntToHexString } from "./utils";
 
 import BulbButton from "./components/BulbButton";
@@ -161,6 +161,31 @@ export default function App() {
     setLock(false);
   }
 
+  async function commitBrightness() {
+    if (lock) {
+      log("Change brightness : lock is on!");
+      return;
+    }
+
+    if (!bulb) {
+      log("Change brightness : bulb not connected!");
+      return;
+    }
+
+    setLock(true);
+    log(`Changing brightness to ${bulb.bright}`);
+
+    try {
+      await SetBrightness(bulb.bright);
+      setBulb(await GetGuts());
+      log("Brightness changed!");
+    } catch (err) {
+      log(`Can not change brightness : ${err}`);
+    }
+
+    setLock(false);
+  }
+
   function onColorPickerColorChangeEnd() {
     setCommitColorChange(true);
   }
@@ -181,19 +206,36 @@ export default function App() {
     });
   }
 
+  function onBrightnessSliderBrightChange(color) {
+    setBulb((prev) => {
+      return { ...prev, bright: color.value };
+    });
+  }
+
+  function onBrightnessSliderBrightChangeEnd() {
+    setCommitBrightnessChange(true);
+  }
+
   useEffect(() => {
     if (commitColorChange) {
-      commitRGB(bulb.rgb);
+      commitRGB();
       setCommitColorChange(false);
     }
   }, [commitColorChange]);
 
   useEffect(() => {
     if (commitTempChange) {
-      commitTEMP(bulb.ct);
+      commitTEMP();
       setCommitTempChange(false);
     }
   }, [commitTempChange]);
+
+  useEffect(() => {
+    if (commitBrightnessChange) {
+      commitBrightness();
+      setCommitBrightnessChange(false);
+    }
+  }, [commitBrightnessChange]);
 
   useEffect(() => {
     connect();
@@ -220,8 +262,16 @@ export default function App() {
           onColorChange={onColorPickerColorChange}
           onColorChangeEnd={onColorPickerColorChangeEnd}
         />
-        <TemperaturePicker temp={bulb ? bulb.ct : undefined} onTempChange={onTemperaturePickerTempChange} onTempChangeEnd={onTemperaturePickerTempChangeEnd} />
-        <BrightnessSlider />
+        <TemperaturePicker
+          temp={bulb ? bulb.ct : undefined}
+          onTempChange={onTemperaturePickerTempChange}
+          onTempChangeEnd={onTemperaturePickerTempChangeEnd}
+        />
+        <BrightnessSlider
+          bright={bulb ? bulb.bright : undefined}
+          onBrightChange={onBrightnessSliderBrightChange}
+          onBrightChangeEnd={onBrightnessSliderBrightChangeEnd}
+        />
       </div>
     </div>
   );
