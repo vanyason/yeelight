@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"embed"
-	"yeelight/yeelight"
+
+	"github.com/vanyason/yeelight/yeelight"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"

@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"time"
-	"yeelight/yeelight"
+
+	"github.com/vanyason/yeelight/yeelight"
 )
 
 const retries = 2

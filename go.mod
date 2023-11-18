@@ -1,4 +1,4 @@
-module yeelight
+module github.com/vanyason/yeelight
 
 go 1.21.0
 
