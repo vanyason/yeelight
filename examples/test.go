@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"time"
 	"yeelight/yeelight"
 )
 
 const retries = 2
+const pause = 1
 
 // stop on error
 func stopOnError(err error) {
@@ -29,13 +31,9 @@ func setup() (b *yeelight.YLightBulb, err error) {
 func testGetProp(b *yeelight.YLightBulb) {
 	log.Println("Testing get_prop...")
 	res, notif, err := b.SendCommand("get_prop", "power")
-	for i := 0; i < retries && err != nil; i++ {
-		log.Println(err)
-		res, notif, err = b.SendCommand("get_prop", "power")
-	}
 	stopOnError(err)
-
 	log.Printf("\nResult:\t\t%+v\nNotification:\t%+v\n", res, notif)
+	time.Sleep(time.Second * pause)
 }
 
 // test toggle
@@ -43,6 +41,7 @@ func testToggle(b *yeelight.YLightBulb) {
 	for i := 0; i < 2; i++ {
 		stopOnError(b.Toggle())
 		log.Printf("Power: %t\n", b.Power)
+		time.Sleep(time.Second * pause)
 	}
 }
 
@@ -52,12 +51,15 @@ func testRGB(b *yeelight.YLightBulb) {
 
 	stopOnError(b.SetRGB(255, 0, 0))
 	log.Printf("RGB: %d\n", b.RGB)
+	time.Sleep(time.Second * pause)
 
 	stopOnError(b.SetRGB(0, 255, 0))
 	log.Printf("RGB: %d\n", b.RGB)
+	time.Sleep(time.Second * pause)
 
 	stopOnError(b.SetRGB(0, 0, 255))
 	log.Printf("RGB: %d\n", b.RGB)
+	time.Sleep(time.Second * pause)
 }
 
 // test bright
@@ -66,6 +68,7 @@ func testBright(b *yeelight.YLightBulb) {
 	for i := 0; i <= 100; i += 50 {
 		stopOnError(b.SetBrightness(uint8(i)))
 		log.Printf("Bright: %d\n", b.Bright)
+		time.Sleep(time.Second * pause)
 	}
 }
 
@@ -74,19 +77,24 @@ func testColorTemp(b *yeelight.YLightBulb) {
 	log.Println("Testing Color Temp...")
 	stopOnError(b.SetTemp(int(1700)))
 	log.Printf("Color Temp: %d\n", b.CT)
+	time.Sleep(time.Second * pause)
 	stopOnError(b.SetTemp(int(4000)))
 	log.Printf("Color Temp: %d\n", b.CT)
+	time.Sleep(time.Second * pause)
 	stopOnError(b.SetTemp(int(6500)))
 	log.Printf("Color Temp: %d\n", b.CT)
+	time.Sleep(time.Second * pause)
 }
 
 // test turn on/off
 func testTurnOnOff(b *yeelight.YLightBulb) {
 	log.Println("Testing turn on/off...")
 	stopOnError(b.TurnOff())
+	time.Sleep(time.Second * pause)
 	log.Printf("Power: %t\n", b.Power)
 	stopOnError(b.TurnOn())
 	log.Printf("Power: %t\n", b.Power)
+	time.Sleep(time.Second * pause)
 }
 
 // turn on
@@ -94,6 +102,7 @@ func turnOn(b *yeelight.YLightBulb) {
 	log.Println("Turning on...")
 	stopOnError(b.TurnOn())
 	log.Printf("Power: %t\n", b.Power)
+	time.Sleep(time.Second * pause)
 }
 
 // restore default state

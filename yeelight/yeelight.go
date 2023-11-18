@@ -147,31 +147,36 @@ func (y *YLightBulb) SendCommand(method string, params ...any) (*CommandResult, 
 		return nil, nil, fmt.Errorf("%s error sending (message - %s) : sent %d out of %d", fn, req, sent, len(req))
 	}
 
-	// wait some time because several replies can return
-	time.Sleep(waitTimeout)
-
 	// read and parse reply (can have result (mandatory) and notify (optional) messages)
-	buf := make([]byte, bufSize)
-	y.conn.SetReadDeadline(time.Now().Add(readTimeout))
-	read, err := y.conn.Read(buf)
-	if err != nil {
-		return nil, nil, fmt.Errorf("%s error reading (read: %d) : %w", fn, read, err)
+	messages := make([][]byte, 0, 2)
+	for len(messages) != 2 {
+		buf := make([]byte, bufSize)
+		y.conn.SetReadDeadline(time.Now().Add(readTimeout))
+		read, err := y.conn.Read(buf)
+		if err != nil {
+			netErr, ok := err.(net.Error)
+			if ok && netErr.Timeout() {
+				break
+			} else {
+				return nil, nil, fmt.Errorf("%s error reading (read: %d) : %w", fn, read, err)
+			}
+		}
+
+		messages = append(messages, buf[:read])
 	}
 
-	buf = buf[:read]
 	result := new(CommandResult)
 	notification := new(Notification)
-	messages := bytes.Split(buf, []byte("\n"))
 	for _, message := range messages {
 		if bytes.Contains(message, []byte("id")) {
 			err = json.Unmarshal(message, result)
 			if err != nil {
-				return nil, nil, fmt.Errorf("%s error parsing reply from json (sent: %s received: %s) : %w", fn, req, buf, err)
+				return nil, nil, fmt.Errorf("%s error parsing reply from json (sent: %s received: %s) : %w", fn, req, message, err)
 			}
 		} else if bytes.Contains(message, []byte("props")) {
 			err = json.Unmarshal(message, notification)
 			if err != nil {
-				return nil, nil, fmt.Errorf("%s error parsing reply from json (sent: %s received: %s) : %w", fn, req, buf, err)
+				return nil, nil, fmt.Errorf("%s error parsing reply from json (sent: %s received: %s) : %w", fn, req, message, err)
 			}
 		}
 	}
