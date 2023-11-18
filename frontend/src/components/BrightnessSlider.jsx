@@ -1,14 +1,13 @@
 import React, { useRef, useEffect } from "react";
 import iro from "@jaames/iro";
 
-let brightPicker = null;
-
-export default function BrightnessSlider({ onBrightChange, onBrightChangeEnd, bright }) {
+export default function BrightnessSlider({ onBrightChange, onBrightChangeEnd, bright = 50 }) {
   const brightPickerDomRef = useRef(null);
+  const brightPicker = useRef(null);
 
   useEffect(() => {
-    if (brightPickerDomRef.current && !brightPicker) {
-      brightPicker = new iro.ColorPicker(brightPickerDomRef.current, {
+    if (brightPickerDomRef.current && !brightPicker.current) {
+      brightPicker.current = new iro.ColorPicker(brightPickerDomRef.current, {
         width: 200,
         color: "rgb(0, 0, 0)",
         borderWidth: 1,
@@ -25,28 +24,21 @@ export default function BrightnessSlider({ onBrightChange, onBrightChangeEnd, br
         ],
       });
 
-      brightPicker.color.value = 50;
+      brightPicker.current.color.value = 50;
 
-      brightPicker.on("input:change", function (color) {
+      brightPicker.current.on("input:change", function (color) {
         onBrightChange ? onBrightChange(color) : undefined;
       });
 
-      brightPicker.on("input:end", function (color) {
+      brightPicker.current.on("input:end", function (color) {
         onBrightChangeEnd ? onBrightChangeEnd(color) : undefined;
       });
     }
-
-    return () => {
-      if (brightPicker) {
-        brightPicker = null;
-        brightPickerDomRef.current = null;
-      }
-    };
   }, []);
 
   useEffect(() => {
-    if (brightPicker && bright) {
-      brightPicker.color.value = bright;
+    if (brightPicker.current && bright) {
+      brightPicker.current.color.value = bright;
     }
   }, [bright]);
 

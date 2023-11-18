@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { SelfDiscover, Connect, Disconnect, GetGuts, TurnOn, TurnOff, SetRGBInt, SetTemp, SetBrightness } from "../wailsjs/go/yeelight/YLightBulb";
-import { LogMessage, RGBHexStringToInt, RGBIntToHexString } from "./utils";
+import { RGBHexStringToInt, RGBIntToHexString } from "./utils";
+
+import useLogs from "./useLogs";
 
 import BulbButton from "./components/BulbButton";
 import LogsSection from "./components/LogsSection";
@@ -10,23 +12,20 @@ import BrightnessSlider from "./components/BrightnessSlider";
 import ReconnectButton from "./components/ReconnectButton";
 import DropLogsButton from "./components/DropLogsButton";
 
+const COLOR_CHANGE = 1;
+const TEMP_CHANGE = 2;
+const BRIGHT_CHANGE = 3;
+
+let lock = false;
+
 export default function App() {
-  const [logMsgs, setLogMsgs] = useState([LogMessage("App started...")]);
+  const [logMsgs, log, clearLogs] = useLogs();
   const [bulb, setBulb] = useState(null);
-  const [lock, setLock] = useState(false);
 
   // Nasty hacks to make the color picker work
   const [commitColorChange, setCommitColorChange] = useState(false);
   const [commitTempChange, setCommitTempChange] = useState(false);
   const [commitBrightnessChange, setCommitBrightnessChange] = useState(false);
-
-  function log(msg) {
-    setLogMsgs((prev) => [...prev, LogMessage(msg)]);
-  }
-
-  function dropLogs() {
-    setLogMsgs([LogMessage("Logs cleared!")]);
-  }
 
   async function connect() {
     if (lock) {
@@ -34,7 +33,7 @@ export default function App() {
       return;
     }
 
-    setLock(true);
+    lock = true;
     let bulbLocal = null;
     const retries = 3;
     for (let i = 1; i <= retries && !bulbLocal; i++) {
@@ -44,14 +43,14 @@ export default function App() {
         await Connect();
         setBulb(bulbLocal);
         log("Bulb found and connected!");
-        setLock(false);
+        lock = false;
         return;
       } catch (err) {
         bulbLocal ? log(`Can not connect : ${err}`) : log(`Bulb not found! Trying again... : ${err}`);
       }
     }
     log("Bulb not found! Check that it is turned on and retry!");
-    setLock(false);
+    lock = false;
   }
 
   async function disconnect() {
@@ -65,7 +64,7 @@ export default function App() {
       return;
     }
 
-    setLock(true);
+    lock = true;
     try {
       await Disconnect();
       setBulb(null);
@@ -73,7 +72,7 @@ export default function App() {
     } catch (err) {
       log(`Can not disconnect : ${err}`);
     }
-    setLock(false);
+    lock = false;
   }
 
   async function reconnect() {
@@ -96,7 +95,7 @@ export default function App() {
       return;
     }
 
-    setLock(true);
+    lock = true;
     log("Toggling bulb...");
 
     const expectedPower = !bulb.power;
@@ -108,134 +107,67 @@ export default function App() {
       log(`Can not toggle bulb : ${err}`);
     }
 
-    setLock(false);
+    lock = false;
   }
 
-  async function commitRGB() {
+  async function commit(changeType) {
     if (lock) {
-      log("Change RGB : lock is on!");
+      log("Can`t commit: lock is on!");
       return;
     }
 
     if (!bulb) {
-      log("Change color : bulb not connected!");
+      log("Can`t commit: bulb not connected!");
       return;
     }
 
-    setLock(true);
-    log(`Changing color to ${RGBIntToHexString(bulb.rgb)}`);
+    lock = true;
+    log(`Committing new state: [rgb : ${RGBIntToHexString(bulb.rgb)}, temp: ${bulb.ct},brightness: ${bulb.bright}]`);
 
     try {
-      await SetRGBInt(bulb.rgb);
+      switch (changeType) {
+        case COLOR_CHANGE:
+          await SetRGBInt(bulb.rgb);
+          break;
+        case TEMP_CHANGE:
+          await SetTemp(bulb.ct);
+          break;
+        case BRIGHT_CHANGE:
+          await SetBrightness(bulb.bright);
+          break;
+        default:
+          log(`Unknown change type ${changeType}`);
+          break;
+      }
       setBulb(await GetGuts());
-      log("Color changed!");
+      log("State committed!");
     } catch (err) {
-      log(`Can not change color : ${err}`);
+      log(`Can not commit new state : ${err}`);
     }
 
-    setLock(false);
-  }
-
-  async function commitTEMP() {
-    if (lock) {
-      log("Change Temperature : lock is on!");
-      return;
-    }
-
-    if (!bulb) {
-      log("Change Temperature : bulb not connected!");
-      return;
-    }
-
-    setLock(true);
-    log(`Changing temperature to ${bulb.ct}`);
-
-    try {
-      await SetTemp(bulb.ct);
-      setBulb(await GetGuts());
-      log("Temperature changed!");
-    } catch (err) {
-      log(`Can not change temperature : ${err}`);
-    }
-
-    setLock(false);
-  }
-
-  async function commitBrightness() {
-    if (lock) {
-      log("Change brightness : lock is on!");
-      return;
-    }
-
-    if (!bulb) {
-      log("Change brightness : bulb not connected!");
-      return;
-    }
-
-    setLock(true);
-    log(`Changing brightness to ${bulb.bright}`);
-
-    try {
-      await SetBrightness(bulb.bright);
-      setBulb(await GetGuts());
-      log("Brightness changed!");
-    } catch (err) {
-      log(`Can not change brightness : ${err}`);
-    }
-
-    setLock(false);
-  }
-
-  function onColorPickerColorChangeEnd() {
-    setCommitColorChange(true);
+    lock = false;
   }
 
   function onColorPickerColorChange(color) {
     setBulb((prev) => {
-      return { ...prev, rgb: RGBHexStringToInt(color.hexString) };
+      if (!prev) return;
+      return { ...prev, rgb: RGBHexStringToInt(color.hexString), mode: 1 };
     });
-  }
-
-  function onTemperaturePickerTempChangeEnd() {
-    setCommitTempChange(true);
   }
 
   function onTemperaturePickerTempChange(color) {
     setBulb((prev) => {
-      return { ...prev, ct: parseInt(color.kelvin) };
+      if (!prev) return;
+      return { ...prev, ct: parseInt(color.kelvin), mode: 2 };
     });
   }
 
   function onBrightnessSliderBrightChange(color) {
     setBulb((prev) => {
+      if (!prev) return;
       return { ...prev, bright: color.value };
     });
   }
-
-  function onBrightnessSliderBrightChangeEnd() {
-    setCommitBrightnessChange(true);
-  }
-
-  useEffect(() => {
-    if (commitColorChange) {
-      commitRGB();
-      setCommitColorChange(false);
-    }
-  }, [commitColorChange]);
-
-  useEffect(() => {
-    if (commitTempChange) {
-      commitTEMP();
-      setCommitTempChange(false);
-    }
-  }, [commitTempChange]);
-
-  useEffect(() => {
-    if (commitBrightnessChange) {
-      commitBrightness();
-      setCommitBrightnessChange(false);
-    }
-  }, [commitBrightnessChange]);
 
   useEffect(() => {
     connect();
@@ -244,6 +176,19 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (commitColorChange) {
+      commit(COLOR_CHANGE);
+      setCommitColorChange(false);
+    } else if (commitTempChange) {
+      commit(TEMP_CHANGE);
+      setCommitTempChange(false);
+    } else if (commitBrightnessChange) {
+      commit(BRIGHT_CHANGE);
+      setCommitBrightnessChange(false);
+    }
+  }, [commitColorChange, commitTempChange, commitBrightnessChange]);
+
   return (
     <div className="h-screen flex flex-col bg-gradient-to-t from-zinc-900 to-zinc-700 text-sky-100">
       <div className="basis-9/12 flex overflow-auto">
@@ -251,7 +196,7 @@ export default function App() {
           <BulbButton onClick={toggle} bulbRef={bulb} parentClasses="basis-9/12 flex items-center justify-center" />
           <div className="h-full flex flex-col items-center justify-center gap-4 basis-3/12">
             <ReconnectButton onClick={reconnect} />
-            <DropLogsButton onClick={dropLogs} />
+            <DropLogsButton onClick={clearLogs} />
           </div>
         </div>
         <LogsSection parentClasses="m-2 basis-3/5" logs={logMsgs} />
@@ -260,17 +205,23 @@ export default function App() {
         <ColorPicker
           rgb={bulb ? RGBIntToHexString(bulb.rgb) : undefined}
           onColorChange={onColorPickerColorChange}
-          onColorChangeEnd={onColorPickerColorChangeEnd}
+          onColorChangeEnd={() => {
+            setCommitColorChange(true);
+          }}
         />
         <TemperaturePicker
           temp={bulb ? bulb.ct : undefined}
           onTempChange={onTemperaturePickerTempChange}
-          onTempChangeEnd={onTemperaturePickerTempChangeEnd}
+          onTempChangeEnd={() => {
+            setCommitTempChange(true);
+          }}
         />
         <BrightnessSlider
           bright={bulb ? bulb.bright : undefined}
           onBrightChange={onBrightnessSliderBrightChange}
-          onBrightChangeEnd={onBrightnessSliderBrightChangeEnd}
+          onBrightChangeEnd={() => {
+            setCommitBrightnessChange(true);
+          }}
         />
       </div>
     </div>

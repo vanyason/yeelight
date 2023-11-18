@@ -1,14 +1,13 @@
 import React, { useRef, useEffect } from "react";
 import iro from "@jaames/iro";
 
-let tempPicker = null;
-
-export default function TemperaturePicker({ onTempChange, onTempChangeEnd, temp }) {
+export default function TemperaturePicker({ onTempChange, onTempChangeEnd, temp = 4250 }) {
   const tempPickerDomRef = useRef(null);
+  const tempPicker = useRef(null);
 
   useEffect(() => {
-    if (tempPickerDomRef.current && !tempPicker) {
-      tempPicker = new iro.ColorPicker(tempPickerDomRef.current, {
+    if (tempPickerDomRef.current && !tempPicker.current) {
+      tempPicker.current = new iro.ColorPicker(tempPickerDomRef.current, {
         width: 200,
         borderWidth: 1,
         borderColor: "#fff",
@@ -27,28 +26,21 @@ export default function TemperaturePicker({ onTempChange, onTempChangeEnd, temp 
         ],
       });
 
-      tempPicker.color.kelvin = 4250;
+      tempPicker.current.color.kelvin = 4250;
 
-      tempPicker.on("input:change", function (color) {
+      tempPicker.current.on("input:change", function (color) {
         onTempChange ? onTempChange(color) : undefined;
       });
 
-      tempPicker.on("input:end", function (color) {
+      tempPicker.current.on("input:end", function (color) {
         onTempChangeEnd ? onTempChangeEnd(color) : undefined;
       });
     }
-
-    return () => {
-      if (tempPicker) {
-        tempPicker = null;
-        tempPickerDomRef.current = null;
-      }
-    };
   }, []);
 
   useEffect(() => {
-    if (tempPicker && temp) {
-      tempPicker.color.kelvin = temp;
+    if (tempPicker.current && temp) {
+      tempPicker.current.color.kelvin = temp;
     }
   }, [temp]);
 

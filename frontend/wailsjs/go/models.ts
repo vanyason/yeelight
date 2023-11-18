@@ -67,8 +67,6 @@ export namespace yeelight {
 	    power: boolean;
 	    mode: number;
 	    rgb: number;
-	    sat: number;
-	    hue: number;
 	    ct: number;
 	    bright: number;
 	    // Go type: net
@@ -84,8 +82,6 @@ export namespace yeelight {
 	        this.power = source["power"];
 	        this.mode = source["mode"];
 	        this.rgb = source["rgb"];
-	        this.sat = source["sat"];
-	        this.hue = source["hue"];
 	        this.ct = source["ct"];
 	        this.bright = source["bright"];
 	        this.location = this.convertValues(source["location"], null);

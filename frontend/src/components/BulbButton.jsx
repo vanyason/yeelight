@@ -1,7 +1,19 @@
 import { ClipLoader } from "react-spinners";
-import { RGBIntToHexString } from "../utils";
+import { RGBIntToHexString, KelvinToRGBHEXString } from "../utils";
 
-const defaultColor = "#616161";
+function color(bulb) {
+  const defaultColor = "#616161";
+
+  if (!bulb || !bulb.power) {
+    return defaultColor;
+  }
+
+  if (bulb.mode === 2) {
+    return KelvinToRGBHEXString(bulb.ct);
+  }
+
+  return RGBIntToHexString(bulb.rgb);
+}
 
 export default function BulbButton({ parentClasses, onClick, bulbRef }) {
   return (
@@ -34,7 +46,7 @@ export default function BulbButton({ parentClasses, onClick, bulbRef }) {
         />
         <path
           style={{
-            fill: bulbRef ? (bulbRef.power ? RGBIntToHexString(bulbRef.rgb) : defaultColor) : defaultColor,
+            fill: color(bulbRef),
           }}
           d="M257.861,85.607c-74.306-1.006-136.51,60.325-136.51,134.637c0,29.618,9.571,56.997,25.777,79.229 c26.009,43.305,38.363,63.481,42.092,89.916c1.599,11.334,11.283,19.77,22.729,19.77h88.102c11.446,0,21.129-8.437,22.729-19.77 c3.73-26.435,16.084-46.61,42.092-89.916c16.207-22.232,25.777-49.611,25.777-79.229C390.649,146.5,331.367,86.602,257.861,85.607z"
         />

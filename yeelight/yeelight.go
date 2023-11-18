@@ -25,20 +25,19 @@ const (
 	readTimeout                 = timeout
 	waitTimeout                 = time.Millisecond * 1200
 	bufSize                     = 2048
-	smoothDur                   = 300
+	smoothDur                   = 150
 )
 
 type (
 	// Yeelight device controller class
 	YLightBulb struct {
-		Power    bool         `json:"power"`    //< on / off
-		Mode     ColorMode    `json:"mode"`     //< 1 - color mode; 2 - temperature; 3 - HSV
-		RGB      int          `json:"rgb"`      //< RGB value  		     (decimal)  	if mode = 1
-		SAT      int          `json:"sat"`      //< Saturation  		  (0-100)		if mode = 3
-		HUE      int          `json:"hue"`      //< HUE 				  (0-359)		if mode = 3
-		CT       int          `json:"ct"`       //< current temperature   (? - ?)		if mode = 2
-		Bright   int          `json:"bright"`   //< brightness 		      (1-100)
-		Location *net.TCPAddr `json:"location"` //< yeelight://ip:port
+		Power  bool      `json:"power"`  //< on / off
+		Mode   ColorMode `json:"mode"`   //< 1 - color mode; 2 - temperature; 3 - HSV
+		RGB    int       `json:"rgb"`    //< RGB value  		     (decimal)  	if mode = 1
+		CT     int       `json:"ct"`     //< current temperature   (? - ?)		if mode = 2
+		Bright int       `json:"bright"` //< brightness 		      (1-100)
+
+		location *net.TCPAddr `json:"location"` //< yeelight://ip:port
 		conn     net.Conn     `json:"conn"`     //< TCP connection to yeelight
 	}
 
@@ -104,7 +103,7 @@ func (y *YLightBulb) Connect() (err error) {
 	if y.conn != nil {
 		return nil
 	}
-	if y.conn, err = net.DialTimeout("tcp", y.Location.String(), timeout); err != nil {
+	if y.conn, err = net.DialTimeout("tcp", y.location.String(), timeout); err != nil {
 		return fmt.Errorf("[yeelight - connect] can not connect : %w", err)
 	}
 	return nil
@@ -221,6 +220,7 @@ func (y *YLightBulb) SetRGBInt(rgb int) error {
 	}
 
 	y.RGB = rgb
+	y.Mode = RGB
 	return nil
 }
 
@@ -258,6 +258,7 @@ func (y *YLightBulb) SetTemp(temp int) error {
 	}
 
 	y.CT = int(temp)
+	y.Mode = Temperature
 	return nil
 }
 
@@ -336,7 +337,7 @@ func parseDiscoverData(data string) (bulb *YLightBulb, err error) {
 	// Parse
 	bulb = &YLightBulb{}
 
-	bulb.Location, err = net.ResolveTCPAddr("tcp", strings.TrimPrefix(resp.Header.Get("location"), "yeelight://"))
+	bulb.location, err = net.ResolveTCPAddr("tcp", strings.TrimPrefix(resp.Header.Get("location"), "yeelight://"))
 	if err != nil {
 		return nil, fmt.Errorf("%s can`t parse location (data: %s): %w", fn, data, err)
 	}
@@ -359,16 +360,6 @@ func parseDiscoverData(data string) (bulb *YLightBulb, err error) {
 	bulb.RGB, err = strconv.Atoi(resp.Header.Get("rgb"))
 	if err != nil {
 		return nil, fmt.Errorf("%s can`t parse RGB (data: %s): %w", fn, data, err)
-	}
-
-	bulb.SAT, err = strconv.Atoi(resp.Header.Get("sat"))
-	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse SAT (data: %s): %w", fn, data, err)
-	}
-
-	bulb.HUE, err = strconv.Atoi(resp.Header.Get("hue"))
-	if err != nil {
-		return nil, fmt.Errorf("%s can`t parse HUE (data: %s): %w", fn, data, err)
 	}
 
 	bulb.CT, err = strconv.Atoi(resp.Header.Get("ct"))
