@@ -1,6 +1,5 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "yeelight",
   "outputfilename": "yeelight",
   "frontend:install": "npm install",
   "frontend:build": "npm run build",
@@ -9,5 +8,11 @@
   "author": {
     "name": "vanyason",
     "email": "vanyason@mail.ru"
+  },
+  "name": "yeelight",
+  "version": "0.9.0",
+  "info": {
+    "productVersion": "0.9.0",
+    "comments": "Controller to manipulate Yeelight lightbulb over LAN"
   }
 }
