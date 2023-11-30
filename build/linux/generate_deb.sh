@@ -6,8 +6,8 @@ WAILS_WEBSITE="https://wails.io/docs/gettingstarted/installation/"
 SCRIPT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 PROJECT_DIR="$SCRIPT_DIR/../../"
 BIN_DIR="$SCRIPT_DIR/../bin"
-BIN_NAME=$(jq -r '.name' "$PROJECT_DIR/version.json")
-VERSION=$(jq -r '.version' "$PROJECT_DIR/version.json")
+BIN_NAME=$(jq -r '.name' "$PROJECT_DIR/wails.json")
+VERSION=$(jq -r '.version' "$PROJECT_DIR/wails.json")
 ARCHITECTURE=$(dpkg --print-architecture)
 DESCRIPTION="Desktop application for controlling Xiaomi/Yeelight lightbulb"
 
