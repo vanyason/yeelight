@@ -3,6 +3,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/vanyason/yeelight)](https://github.com/vanyason/yeelight/issues)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/vanyason/yeelight)](https://github.com/vanyason/yeelight/releases)
 [![GitHub](https://img.shields.io/github/license/vanyason/yeelight)](https://github.com/vanyason/yeelight/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vanyason/yeelight)](https://goreportcard.com/report/github.com/vanyason/yeelight)
 
 <img src=".github/images/screenshot.png" width="512" />
 
