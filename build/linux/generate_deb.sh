@@ -57,7 +57,7 @@ printf "Creating debian package...\n"
 
 # Create debian folder
 cd "$BIN_DIR" || { printf "cd failed : %s\n" "$BIN_DIR"; exit "$ERROR_CODE"; }
-DEB_DIR_NAME="${BIN_NAME}_$VERSION_$ARCHITECTURE"
+DEB_DIR_NAME="${BIN_NAME}_${VERSION}_${ARCHITECTURE}"
 rm -rf "$DEB_DIR_NAME"
 
 DEB_BIN_PATH=/usr/local/bin

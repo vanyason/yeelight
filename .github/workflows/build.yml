@@ -1,0 +1,48 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Build Wails
+        uses: dAppServer/wails-build-action@v2.2
+        with:
+          build-name: wailsApp
+          nsis: false
+          package: false
+          build-platform: linux/amd64
+
+      - name: Build DEB package
+        working-directory: ${{ github.workspace }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y lintian
+          chmod +x ./build/linux/generate_deb.sh
+          ./build/linux/generate_deb.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3.1.3
+        with:
+          name: Linux yeelight
+          path: ${{ github.workspace }}/build/bin/*
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: dAppServer/wails-build-action@v2.2
+        with:
+          package: true
+          nsis: true
+          build-name: yeelight
+          build-platform: windows/amd64
