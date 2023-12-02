@@ -4,6 +4,7 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/vanyason/yeelight)](https://github.com/vanyason/yeelight/releases)
 [![GitHub](https://img.shields.io/github/license/vanyason/yeelight)](https://github.com/vanyason/yeelight/blob/master/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/vanyason/yeelight)](https://goreportcard.com/report/github.com/vanyason/yeelight)
+[![Workflow](https://github.com/vanyason/yeelight/actions/workflows/build.yml/badge.svg)](https://github.com/vanyason/yeelight/actions/workflows/build.yml)
 
 <img src=".github/images/screenshot.png" width="512" />
 
