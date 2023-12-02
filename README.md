@@ -41,7 +41,7 @@ To build locally `git clone ...` the repo, follow the [Wails installation guide]
 ## 📜 Todo
 
 - [ ] Tests
-- [ ] Automatic builds
+- [x] Automatic builds
 - [ ] Fix bugs as they are discovered
 - [ ] MacOS build
 - [ ] Change UI to a more UX friendly one
