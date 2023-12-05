@@ -17,7 +17,7 @@ jobs:
       - name: Build Wails
         uses: dAppServer/wails-build-action@v2.2
         with:
-          build-name: wailsApp
+          build-name: yeelight
           nsis: false
           package: false
           build-platform: linux/amd64
@@ -39,13 +39,32 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - uses: dAppServer/wails-build-action@v2.2
+      - name: Build Wails
+        uses: dAppServer/wails-build-action@v2.2
         with:
           package: true
           nsis: true
           build-name: yeelight
           build-platform: windows/amd64
+
+  build-macos:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Build Wails
+        uses: dAppServer/wails-build-action@v2.2
+        with:
+          package: true
+          nsis: false
+          sign: false
+          build-name: yeelight
+          build-platform: darwin/universal

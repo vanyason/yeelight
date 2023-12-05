@@ -10,9 +10,9 @@
     "email": "vanyason@mail.ru"
   },
   "name": "yeelight",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "info": {
-    "productVersion": "0.9.0",
+    "productVersion": "0.9.1",
     "comments": "Controller to manipulate Yeelight lightbulb over LAN"
   }
 }
